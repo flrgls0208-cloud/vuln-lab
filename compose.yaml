@@ -1,0 +1,29 @@
+services:
+  vulnlab:
+    image: vulnlab
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 5000:5000
+    environment:
+      # 팀원 DB(192.168.111.40) 대신, 아래에 띄울 'db' 컨테이너로 연결
+      - DB_USER=root
+      - DB_PASSWORD=0000
+      - DB_HOST=db      
+      - DB_PORT=3306
+      - DB_NAME=myapp_db
+      - SECURITY_LEVEL=1
+    depends_on:
+      - db
+
+  # 2. 데이터베이스 컨테이너 (새로 추가됨)
+  db:
+    image: mariadb:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=0000
+      - MYSQL_DATABASE=myapp_db
+    ports:
+      # 팀원이 쓰던 포트(4034)를 내 로컬에도 똑같이 열어둠
+      - "4034:3306"

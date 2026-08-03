@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>LFI 실습</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; background-color: #f4f4f9; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        pre { background: #eee; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>LFI 취약점 실습</h2>
+        <form action="/lfi" method="GET">
+            <label for="file">파일 경로 입력:</label>
+            <input type="text" id="file" name="file" value="notice.txt" style="width: 70%; padding: 5px;">
+            <button type="submit" style="padding: 6px 12px;">조회</button>
+        </form>
+        <h3>결과 출력:</h3>
+        <pre>{{ content | safe }}</pre>
+        <br>
+        <a href="/">메인으로 돌아가기</a>
+    </div>
+</body>
+</html>
