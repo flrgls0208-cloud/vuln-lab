@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ post.title }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 30px; }
+        .post-header { border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+        .post-title { margin-bottom: 5px; }
+        .post-meta { color: #666; font-size: 0.9em; }
+        .post-content { margin-top: 20px; min-height: 150px; line-height: 1.6; }
+        .actions { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+        .btn { padding: 6px 12px; text-decoration: none; border: 1px solid #ccc; background: #f8f8f8; color: #333; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="post-header">
+        <h2 class="post-title">{{ post.title }}</h2>
+        <div class="post-meta">
+            작성자: <strong>{{ post.author }}</strong> | 글 번호: #{{ post.id }}
+        </div>
+    </div>
+
+    <!-- Stored XSS 실습 포인트: content를 escape 없이 safe 필터로 출력 -->
+    <div class="post-content">
+        {{ post.content | safe }}
+    </div>
+
+    <div class="actions">
+        <a href="{{ url_for('board.board_list') }}" class="btn">목록으로</a>
+        
+        <!-- 로그인한 사용자 세션 체크 -->
+        {% if session.get('username') %}
+            <a href="{{ url_for('board.board_edit', post_id=post.id) }}" class="btn">수정</a>
+            
+            <form action="{{ url_for('board.board_delete', post_id=post.id) }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn" onclick="return confirm('정말 삭제하시겠습니까?');">삭제</button>
+            </form>
+        {% endif %}
+    </div>
+</body>
+</html>

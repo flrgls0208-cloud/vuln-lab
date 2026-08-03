@@ -2,50 +2,22 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>게시판 - vuln-lab</title>
-    <style>
-        body { font-family: sans-serif; background: #f4f4f4; margin: 0; padding: 30px; }
-        .wrap { max-width: 700px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h2 { margin-top: 0; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
-        th { color: #888; font-size: 13px; }
-        a { color: #333; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .top { display: flex; justify-content: space-between; align-items: center; }
-        .btn { padding: 8px 14px; background: #333; color: #fff; border-radius: 4px; }
-        .flash { color: #2e7d32; font-size: 14px; margin-bottom: 10px; }
-        .empty { color: #999; padding: 20px 0; text-align: center; }
-    </style>
+    <title>게시판 목록</title>
 </head>
 <body>
-    <div class="wrap">
-        <div class="top">
-            <h2>게시판</h2>
-            <a class="btn" href="{{ url_for('board.board_write') }}">글쓰기</a>
-        </div>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for msg in messages %}
-                    <div class="flash">{{ msg }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        {% if posts %}
-        <table>
-            <tr><th>제목</th><th>작성자</th><th>작성일</th></tr>
-            {% for post in posts %}
-            <tr>
-                <td><a href="{{ url_for('board.board_view', post_id=post.id) }}">{{ post.title }}</a></td>
-                <td>{{ post.author }}</td>
-                <td>{{ post.created_at.strftime('%Y-%m-%d %H:%M') if post.created_at else '' }}</td>
-            </tr>
-            {% endfor %}
-        </table>
+    <h2>게시판 목록</h2>
+    <a href="{{ url_for('board.board_write') }}">글쓰기</a>
+    <hr>
+    <ul>
+        {% for post in posts %}
+            <li>
+                <a href="{{ url_for('board.board_view', post_id=post.id) }}">{{ post.title }}</a>
+                (작성자: {{ post.author }})
+            </li>
         {% else %}
-        <div class="empty">등록된 글이 없습니다.</div>
-        {% endif %}
-    </div>
+            <li>등록된 게시글이 없습니다.</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}">메인으로 돌아가기</a>
 </body>
 </html>

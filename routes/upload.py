@@ -57,11 +57,3 @@ def uploaded_file(filename):
     with open(file_path, 'rb') as fp:
         data = fp.read()
     return data
-
-@upload_bp.route('/uploads/<path:filename>')
-def uploaded_file(filename):
-    # 실습 목적: send_from_directory 대신 직접 경로 결합 -> filename에 ../ 포함 시 Path Traversal 가능
-    file_path = os.path.join(UPLOAD_DIR, filename)
-    with open(file_path, 'rb') as fp:
-        data = fp.read()
-    return data

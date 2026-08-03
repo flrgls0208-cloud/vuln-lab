@@ -22,22 +22,24 @@ def board_list():
 @board_bp.route('/write', methods=['GET', 'POST'])
 @login_required
 def board_write():
-    if request.method == 'GET':
-        return render_template('board_write.html')
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        content = request.form.get('content', '')
 
-    title = request.form.get('title', '').strip()
-    content = request.form.get('content', '')
+        if not title or not content:
+            flash('제목과 내용을 모두 입력해주세요.')
+            return redirect(url_for('board.board_write'))
 
-    if not title or not content:
-        flash('제목과 내용을 모두 입력해주세요.')
-        return redirect(url_for('board.board_write'))
+        # DB 저장 로직 (Stored XSS 및 CSRF 실습용)
+        new_post = Post(title=title, content=content, author=session.get('username'))
+        db.session.add(new_post)
+        db.session.commit()
 
-    new_post = Post(title=title, content=content, author=session.get('username'))
-    db.session.add(new_post)
-    db.session.commit()
+        flash('게시글이 등록되었습니다.')
+        return redirect(url_for('board.board_list'))
 
-    flash('게시글이 등록되었습니다.')
-    return redirect(url_for('board.board_list'))
+    # ★ GET 요청일 때 HTML 템플릿을 정상적으로 렌더링하도록 밖으로 빼내어 리턴합니다!
+    return render_template('board_write.html')
 
 @board_bp.route('/<int:post_id>')
 def board_view(post_id):

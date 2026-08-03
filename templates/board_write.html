@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>게시글 작성/수정</title>
+</head>
+<body>
+    <h2>{% if post %}게시글 수정{% else %}게시글 작성{% endif %}</h2>
+    <form method="POST">
+        <div>
+            <label>제목:</label><br>
+            <input type="text" name="title" value="{{ post.title if post else '' }}" required style="width: 300px;">
+        </div>
+        <br>
+        <div>
+            <label>내용:</label><br>
+            <textarea name="content" rows="10" cols="50" required>{{ post.content if post else '' }}</textarea>
+        </div>
+        <br>
+        <button type="submit">{% if post %}수정하기{% else %}등록하기{% endif %}</button>
+        <a href="{{ url_for('board.board_list') }}">취소</a>
+    </form>
+</body>
+</html>
