@@ -6,7 +6,7 @@
 </head>
 <body>
     <h2>{% if post %}게시글 수정{% else %}게시글 작성{% endif %}</h2>
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         <div>
             <label>제목:</label><br>
             <input type="text" name="title" value="{{ post.title if post else '' }}" required style="width: 300px;">
@@ -16,6 +16,16 @@
             <label>내용:</label><br>
             <textarea name="content" rows="10" cols="50" required>{{ post.content if post else '' }}</textarea>
         </div>
+        <br>
+        <div>
+            <label>첨부파일 업로드:</label><br>
+            <input type="file" name="attachment">
+        </div>
+        {% if post and post.image_path %}
+        <div>
+            <p>현재 첨부파일: <a href="{{ url_for('board.board_download', post_id=post.id) }}" target="_blank">{{ post.image_path.split('/')[-1] }}</a></p>
+        </div>
+        {% endif %}
         <br>
         <button type="submit">{% if post %}수정하기{% else %}등록하기{% endif %}</button>
         <a href="{{ url_for('board.board_list') }}">취소</a>

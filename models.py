@@ -1,38 +1,46 @@
 from extensions import db
 
+
 class User(db.Model):
     __tablename__ = 'users'
-    
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(50), nullable=False, unique=True)
-    password = db.Column(db.String(100), nullable=False) # 취약점 실습용으로 평문 저장 등을 테스트할 수 있음
-    role = db.Column(db.String(20), nullable=False, default='user') # 추후 권한 상승(Privilege Escalation) 실습용
+    password = db.Column(db.String(100), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='user')
+    session_id = db.Column(db.String(255), nullable=True)
 
     def __repr__(self):
         return f'<User {self.username}>'
 
 
-class Post(db.Model):
-    __tablename__ = 'posts'
+class Dsboard(db.Model):
+    __tablename__ = 'dsboard'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    title = db.Column(db.String(200), nullable=False)
-    # 실습 목적: content를 escape 없이 그대로 저장/렌더링 -> Stored XSS 포인트
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    author = db.Column(db.String(50), nullable=False)
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    image_path = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
+
+    user = db.relationship('User', backref=db.backref('dsboards', lazy=True))
+    comments = db.relationship('Comment', backref='post', cascade='all, delete-orphan', lazy=True)
 
     def __repr__(self):
-        return f'<Post {self.id} {self.title}>'
+        return f'<Dsboard {self.id} {self.title}>'
 
 
-'''  from flask_sqlalchemy import SQLAlchemy
+class Comment(db.Model):
+    __tablename__ = 'comments'
 
-db = SQLAlchemy()
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('dsboard.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
 
-class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(50), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='user') '''
+    user = db.relationship('User', backref=db.backref('comments', lazy=True))
+
+    def __repr__(self):
+        return f'<Comment {self.id}>'

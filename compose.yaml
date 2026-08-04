@@ -14,7 +14,6 @@ services:
       - DB_HOST=db      
       - DB_PORT=3306
       - DB_NAME=myapp_db
-      - SECURITY_LEVEL=1
     depends_on:
       - db
 

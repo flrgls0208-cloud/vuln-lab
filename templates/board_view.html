@@ -11,32 +11,67 @@
         .post-content { margin-top: 20px; min-height: 150px; line-height: 1.6; }
         .actions { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
         .btn { padding: 6px 12px; text-decoration: none; border: 1px solid #ccc; background: #f8f8f8; color: #333; border-radius: 4px; cursor: pointer; }
+        .image-box { margin-top: 20px; }
+        .image-box img { max-width: 100%; height: auto; }
     </style>
 </head>
 <body>
     <div class="post-header">
         <h2 class="post-title">{{ post.title }}</h2>
         <div class="post-meta">
-            작성자: <strong>{{ post.author }}</strong> | 글 번호: #{{ post.id }}
+            작성자: <strong>{{ post.user.username if post.user else '알 수 없음' }}</strong> | 글 번호: #{{ post.id }}
         </div>
     </div>
 
-    <!-- Stored XSS 실습 포인트: content를 escape 없이 safe 필터로 출력 -->
     <div class="post-content">
         {{ post.content | safe }}
     </div>
 
+    {% if post.image_path %}
+        {% set ext = post.image_path.rsplit('.', 1)[1].lower() if '.' in post.image_path else '' %}
+        <div class="image-box">
+            {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+                <img src="{{ url_for('static', filename=post.image_path) }}" alt="게시글 이미지">
+            {% else %}
+                <p>첨부파일: <a href="{{ url_for('board.board_download', post_id=post.id) }}">{{ post.image_path.split('/')[-1] }}</a></p>
+            {% endif %}
+        </div>
+    {% endif %}
+
     <div class="actions">
         <a href="{{ url_for('board.board_list') }}" class="btn">목록으로</a>
-        
-        <!-- 로그인한 사용자 세션 체크 -->
-        {% if session.get('username') %}
+
+        {% if session.get('user_id') and (post.user_id == session.get('user_id') or session.get('role') == 'admin' or session.get('role') == 'manager') %}
             <a href="{{ url_for('board.board_edit', post_id=post.id) }}" class="btn">수정</a>
-            
+
             <form action="{{ url_for('board.board_delete', post_id=post.id) }}" method="POST" style="display:inline;">
                 <button type="submit" class="btn" onclick="return confirm('정말 삭제하시겠습니까?');">삭제</button>
             </form>
         {% endif %}
     </div>
+
+    <hr>
+    <h3>댓글</h3>
+    {% if session.get('user_id') %}
+    <form method="POST" style="margin-bottom: 16px;">
+        <textarea name="comment" rows="3" style="width: 100%; box-sizing: border-box;"></textarea>
+        <br><br>
+        <button type="submit" class="btn">댓글 등록</button>
+    </form>
+    {% else %}
+    <p>댓글을 작성하려면 로그인하세요.</p>
+    {% endif %}
+
+    {% if post.comments %}
+        {% for comment in post.comments|sort(attribute='created_at', reverse=True) %}
+            <div style="border-top: 1px solid #eee; padding: 10px 0;">
+                <strong>{{ comment.user.username if comment.user else '알 수 없음' }}</strong>
+                <div style="color: #666; font-size: 0.9em; margin-bottom: 6px;">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') if comment.created_at else '-' }}</div>
+                <div>{{ comment.content }}</div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>아직 댓글이 없습니다.</p>
+    {% endif %}
 </body>
 </html>
