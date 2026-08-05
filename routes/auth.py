@@ -77,10 +77,6 @@ def login():
         # is_valid_password = (user.password == password)
 
     if user and is_valid_password:
-        if user.session_id and session.get('user_id') != user.id:
-            flash('이미 다른 기기에서 로그인 중입니다. 기존 로그인 세션이 우선 적용됩니다.')
-            return redirect(url_for('auth.login'))
-
         new_session_id = str(uuid.uuid4())
         user.session_id = new_session_id
         db.session.commit()

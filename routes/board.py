@@ -12,11 +12,6 @@ from models import Dsboard, Comment, User
 board_bp = Blueprint('board', __name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIR = os.path.join(BASE_DIR, 'static', 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def login_required(f):
@@ -43,10 +38,6 @@ def save_uploaded_file():
     filename = secure_filename(uploaded_file.filename)
     if not filename:
         flash('올바른 파일명만 업로드할 수 있습니다.')
-        return None
-
-    if not allowed_file(filename):
-        flash('허용된 이미지 형식은 png, jpg, jpeg, gif 입니다.')
         return None
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
